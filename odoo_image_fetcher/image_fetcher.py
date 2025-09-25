@@ -2,6 +2,11 @@ import os
 import logging
 import requests
 from dotenv import load_dotenv
+import urllib3
+import io
+
+# Suppress SSL warnings for this test
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables
 load_dotenv()
