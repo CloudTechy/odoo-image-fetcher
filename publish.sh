@@ -16,7 +16,7 @@ echo "✅ Running tests..."
 pytest
 
 echo "🛠️ Building package..."
-python setup.py sdist bdist_wheel
+python -m build
 
 echo "🚀 Publishing to PyPI..."
 twine upload dist/*

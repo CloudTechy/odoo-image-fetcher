@@ -12,7 +12,7 @@ test:
 	pytest
 
 build:
-	python setup.py sdist bdist_wheel
+	python -m build
 
 clean:
 	rm -rf dist build *.egg-info
