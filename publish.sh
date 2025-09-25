@@ -25,4 +25,7 @@ echo "🏷️ Tagging version $VERSION"
 git tag $VERSION
 git push origin $VERSION
 
+echo "cleaning up"
+rm -rf dist build *.egg-info
+
 echo "✅ Done!"

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='odoo-image-fetcher',
-    version='0.1.4',
+    version='0.1.5',
     author='Onyekelu Chukwuebuka',
     author_email='conyekelu@yahoo.com',
     description='Fetch images from an Odoo backend using session-based authentication',
