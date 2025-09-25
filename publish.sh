@@ -21,8 +21,8 @@ python -m build
 echo "🚀 Publishing to PyPI..."
 twine upload dist/*
 
-echo "🏷️ Tagging version v$VERSION"
-git tag v$VERSION
-git push origin v$VERSION
+echo "🏷️ Tagging version $VERSION"
+git tag $VERSION
+git push origin $VERSION
 
 echo "✅ Done!"
