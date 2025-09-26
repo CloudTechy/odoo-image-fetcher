@@ -12,7 +12,7 @@ pip install odoo-image-fetcher
 ## Usage
 
 ```python
-from odoo_image_fetcher.image_fetcher import ImageFetcher
+from odoo_image_fetcher import ImageFetcher
 
 image_bytes = ImageFetcher.fetch_image("/web/image/product.template/17956/image_128")
 if image_bytes:
