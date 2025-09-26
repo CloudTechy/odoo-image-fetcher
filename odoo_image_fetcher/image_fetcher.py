@@ -3,7 +3,9 @@ import logging
 import requests
 from dotenv import load_dotenv
 import urllib3
-import io
+import xmlrpc.client
+import base64
+import ssl
 
 # Suppress SSL warnings for this test
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -20,62 +22,59 @@ class ImageFetcher:
     _username = os.getenv("ODOO_USERNAME")
     _password = os.getenv("ODOO_PASSWORD")
     _db = os.getenv("ODOO_DB")
+    _odoo_url = os.getenv("ODOO_BASE_URL")
 
     @staticmethod
-    def login():
-        """
-        Login to Odoo via JSON-RPC and persist session cookies.
-        """
-        login_url = f"{ImageFetcher._base_url}/web/session/authenticate"
-
-        if not all([ImageFetcher._username, ImageFetcher._password, ImageFetcher._db]):
-            logging.error("Missing credentials or DB name in environment variables.")
-            return False
-
-        payload = {
-            "jsonrpc": "2.0",
-            "params": {
-                "db": ImageFetcher._db,
-                "login": ImageFetcher._username,
-                "password": ImageFetcher._password
-            }
-        }
-
+    def fetch_image(image_path, model="product.template"):
+        logging.info("Starting image fetch process for: %s", image_path)
+        
         try:
-            response = ImageFetcher._session.post(login_url, json=payload, verify=False)
-            if response.status_code == 200 and response.json().get("result", {}).get("uid"):
-                logging.info("Odoo login successful.")
-                return True
-            else:
-                logging.error("Odoo login failed. Status: %s. Response: %s",
-                              response.status_code, response.text)
-                return False
-        except Exception as e:
-            logging.error("Login exception: %s", e)
-            return False
+            # Create an unverified SSL context
+            unverified_context = ssl._create_unverified_context()
 
-    @staticmethod
-    def fetch_image(image_path):
-        """
-        Fetch image using Odoo session cookies.
-        :param image_path: Path to the image (relative or full URL)
-        :return: image bytes or None
-        """
-        try:
-            if not image_path.startswith("http"):
-                if not ImageFetcher._base_url:
-                    raise ValueError("Base URL not configured.")
-                url = f"{ImageFetcher._base_url}/{image_path.lstrip('/')}"
-            else:
-                url = image_path
+            # Pass the unverified context to ServerProxy
+            common = xmlrpc.client.ServerProxy(
+                f'{ImageFetcher._odoo_url}/xmlrpc/2/common',
+                context=unverified_context
+            )
+            uid = common.authenticate(ImageFetcher._db, ImageFetcher._username, ImageFetcher._password, {})
 
-            response = ImageFetcher._session.get(url, verify=False)
-            if response.status_code == 200:
-                logging.info("Fetched image from %s", url)
-                return response.content
+            if not uid:
+                logging.error("Authentication failed.")
+                exit()
+
+            logging.info("Authentication successful. User ID: %s", uid)
+
+            # Pass the unverified context to the models ServerProxy as well
+            models = xmlrpc.client.ServerProxy(
+                f'{ImageFetcher._odoo_url}/xmlrpc/2/object',
+                context=unverified_context
+            )
+            
+            url = image_path.strip()
+            url_breaks = url.split('/')
+            
+            # Use a list to access the extracted image ID and name
+            image_id = int(url_breaks[-2])  # Convert ID to integer
+            image_name = url_breaks[-1].strip()
+            logging.info("Extracted image name: %s", image_name)
+            logging.info("Extracted image ID: %s", image_id)
+            
+            # Correctly handle the API response
+            image_record = models.execute_kw(
+                ImageFetcher._db, uid, ImageFetcher._password,
+                model, 'read',
+                [[image_id]],
+                {'fields': [image_name]}  # Use the extracted image name here
+            )
+
+            if image_record and image_record[0].get(image_name):
+                image_data_base64 = image_record[0][image_name]
+                logging.info("Image data (Base64) fetched successfully for record %s.", image_id)
+                image_bytes = base64.b64decode(image_data_base64)
+                return image_bytes
             else:
-                logging.error("Failed to fetch image. Status: %s", response.status_code)
-                return None
+                logging.info("No image data found for record %s.", image_id)
+                
         except Exception as e:
-            logging.error("Error while fetching image: %s", e)
-            return None
+            logging.error("An error occurred: %s", e)

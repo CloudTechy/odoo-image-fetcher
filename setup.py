@@ -3,18 +3,19 @@ from setuptools import setup, find_packages
 
 setup(
     name='odoo-image-fetcher',
-    version='0.1.5',
+    version='0.1.7',
     author='Onyekelu Chukwuebuka',
     author_email='conyekelu@yahoo.com',
-    description='Fetch images from an Odoo backend using session-based authentication',
+    description='A simple utility to fetch images from Odoo via XML-RPC.',
     long_description=open('README.md', encoding="utf-8").read(),
     long_description_content_type='text/markdown',
     url='https://github.com/cloudtechy/odoo-image-fetcher',
-    download_url='https://github.com/cloudtechy/odoo-image-fetcher/archive/refs/tags/v0.1.0.tar.gz',
+    download_url='https://github.com/cloudtechy/odoo-image-fetcher/archive/refs/tags/v0.1.7.tar.gz',
     packages=find_packages(),
     install_requires=[
         'requests',
-        'python-dotenv'
+        'python-dotenv',
+        'urllib3'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
