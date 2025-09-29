@@ -21,8 +21,7 @@ if image_bytes:
     print("✅ Image saved.")
 else:
     print("❌ Image fetch failed.")
-else:
-    print("❌ Login failed.")
+
 ```
 
 ## Environment Variables
